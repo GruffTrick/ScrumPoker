@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 
 public class Session {
@@ -19,9 +18,7 @@ public class Session {
 		this.players = new ArrayList<>();
 	}
 
-	/*
-		GETTERS AND SETTERS
-	 */
+
 	public String getId() {
 		return id;
 	}

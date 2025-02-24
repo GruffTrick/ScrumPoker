@@ -5,12 +5,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 
 @RestController
 public class GameController {
-    private List<Session> sessions;
+    private final List<Session> sessions;
 
     public GameController() {
         this.sessions = new ArrayList<>();
@@ -37,7 +36,7 @@ public class GameController {
         return ResponseEntity.ok(sessions.get(sessions.indexOf(session)));
     }
 
-    @PostMapping("api/session/{sessionId}/addPlayer")
+    @PostMapping("api/session/{sessionId}/player/add")
     public ResponseEntity<Player> addPlayer(@PathVariable String sessionId, @RequestBody String name) {
         if (sessions.isEmpty()) return ResponseEntity.noContent().build();
         Session session = null;
@@ -80,7 +79,7 @@ public class GameController {
         }
     }
 
-    @GetMapping("/api/{sessionId}/player/all")
+    @GetMapping("/api/session/{sessionId}/player/all")
     public ResponseEntity<List<Player>> getPlayers(@PathVariable String sessionId) {
         if (sessions.isEmpty()) return ResponseEntity.noContent().build();
         List<Player> players = new ArrayList<>();
@@ -96,8 +95,28 @@ public class GameController {
         return ResponseEntity.ok(players);
     }
 
+    @GetMapping("/api/session/{sessionId}/reveal")
+    public ResponseEntity<List<Player>> getSelections(@PathVariable String sessionId) {
+        if (sessions.isEmpty()) return ResponseEntity.noContent().build();
+        List<Player> players = new ArrayList<>();
+        try {
+            Session session = findMatchingSession(sessionId);
+            if (session == null) return ResponseEntity.badRequest().build();
+            if (session.getPlayers().isEmpty()) ResponseEntity.badRequest().build();
+            for (Player player : session.getPlayers()) {
+                if (player.hasSelected() && player.getSelection() != null) {
+                    players.add(player);
+                }
+            }
+            return ResponseEntity.ok(players);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
-    @PatchMapping("/api/{sessionId}/{playerId}")
+    //Select a value for selection, by player ID
+    @PatchMapping("/api/session/{sessionId}/player/{playerId}/selection")
     public ResponseEntity<Player> updateSelection(@PathVariable String sessionId, @PathVariable String playerId,
                                                   @RequestBody int selection) {
         if (sessions.isEmpty()) return ResponseEntity.badRequest().build();
@@ -107,6 +126,7 @@ public class GameController {
         for (Player player: session.getPlayers()) {
             if (player.getId().equals(playerId)) {
                 player.setSelection(selection);
+                player.setHasSelected(true);
                 return ResponseEntity.ok(player);
             }
         }
@@ -127,6 +147,7 @@ public class GameController {
         }
         return ResponseEntity.ok(session);
     }
+
 
 
     /**
