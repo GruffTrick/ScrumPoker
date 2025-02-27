@@ -43,14 +43,14 @@ public class GameController {
         try {
             session = findMatchingSession(sessionId);
             if (session == null) return ResponseEntity.badRequest().build();
+            if (session.getPlayers().size() == session.getMaxPlayers()) return ResponseEntity.status(507).build(); // 507 insufficient storage if maxplayers in session
+            Player player = new Player(generateId(), name);
+            session.getPlayers().add(player);
+            return ResponseEntity.ok(player);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
-        if (session.getPlayers().size() == session.getMaxPlayers()) return ResponseEntity.status(507).build(); // 507 insufficient storage if maxplayers in session
-        Player player = new Player(generateId(), name);
-        session.getPlayers().add(player);
-        return ResponseEntity.ok(player);
     }
 
     @GetMapping("/api/session/{sessionId}")
@@ -70,7 +70,6 @@ public class GameController {
     @GetMapping("/api/session/all")
     public ResponseEntity<List<Session>> getSession() {
         if (sessions.isEmpty()) return ResponseEntity.noContent().build();
-        Session session = null;
         try {
             return ResponseEntity.ok(sessions);
         } catch (Exception e) {
